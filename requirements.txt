@@ -1,0 +1,10 @@
+# Gemma-2 requires recent transformers; pin to compatible versions.
+pytorch>=2.1
+transformers>=4.42
+tokenizers>=0.19
+datasets>=2.19
+accelerate>=0.30
+safetensors>=0.4
+huggingface_hub>=0.23
+numpy
+tqdm
