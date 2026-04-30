@@ -157,10 +157,10 @@ def harvest_activations(cfg: HarvestConfig) -> None:
     resolved["resolved_layer_idx"] = layer_idx
     resolved["num_layers"] = n_layers
     resolved["resolved_d_model"] = d_model
+    # print(f"[harvest] starting with config: {json.dumps(resolved, indent=2)}")
     with open(out_dir / "meta.json", "w") as f:
         json.dump(resolved, f, indent=2)
-    # print(f"[harvest] starting with config: {json.dumps(resolved, indent=2)}")
-
+    
     text_iter = _stream_text(cfg.dataset_name, cfg.dataset_config, cfg.dataset_split, cfg.text_field)
     # token_iter = _tokenize_stream(text_iter, tokenizer, cfg.seq_len, cfg.batch_size)
 
