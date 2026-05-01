@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Iterator, List
+from typing import Callable, Iterator, List
 
 import torch
 import torch.nn as nn
@@ -55,14 +55,12 @@ class ResidualStreamCatcher:
     def _hook(self, _module, _inputs, output):
         # Block output is typically a tuple (hidden_states, attn_weights, ); grab the hidden states. 
         # Note that for some models (e.g. Llama) the block output is just the hidden states tensor, not a tuple.
-        print(f"[hook] captured output of shape {output[0].shape if isinstance(output, tuple) else output.shape}")
         hidden = output[0] if isinstance(output, tuple) else output
         # Detach + move to CPU later in the buffer; here just keep ref.
         self.activations = hidden
 
     def __enter__(self) -> "ResidualStreamCatcher":
         self._handle = self.block.register_forward_hook(self._hook)
-        print(self._handle)
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -77,3 +75,42 @@ def capture_residual_stream(model: nn.Module, layer_idx: int) -> Iterator[Residu
     catcher = ResidualStreamCatcher(block)
     with catcher:
         yield catcher
+
+
+class ResidualStreamPatcher:
+    """Replaces the residual stream output of a transformer block with
+    ``fn(x)`` on the fly.
+
+    ``fn`` receives the hidden state of shape ``(batch, seq, d_model)`` and
+    must return a tensor of the same shape and dtype.
+    """
+
+    def __init__(self, block: nn.Module, fn: Callable[[torch.Tensor], torch.Tensor]):
+        self.block = block
+        self.fn = fn
+        self._handle = None
+
+    def _hook(self, _module, _inputs, output):
+        if isinstance(output, tuple):
+            new_h = self.fn(output[0])
+            return (new_h,) + output[1:]
+        return self.fn(output)
+
+    def __enter__(self) -> "ResidualStreamPatcher":
+        self._handle = self.block.register_forward_hook(self._hook)
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        if self._handle is not None:
+            self._handle.remove()
+            self._handle = None
+
+
+@contextmanager
+def patch_residual_stream(
+    model: nn.Module, layer_idx: int, fn: Callable[[torch.Tensor], torch.Tensor]
+) -> Iterator[ResidualStreamPatcher]:
+    block = get_residual_block(model, layer_idx)
+    patcher = ResidualStreamPatcher(block, fn)
+    with patcher:
+        yield patcher

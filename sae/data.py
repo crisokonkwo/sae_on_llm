@@ -175,7 +175,5 @@ def harvest_activations(cfg: HarvestConfig) -> None:
     resolved["skipped_empty_docs"] = skipped_empty
     with open(out_dir / "meta.json", "w") as f:
         json.dump(resolved, f, indent=2)
-    print(
-        f"[harvest] done. docs={docs_seen} tokens={writer.total_written:,} "
-        f"shards={writer.shard_idx} -> {out_dir}"
-    )
+    print(f"[harvest] done. docs={docs_seen} tokens={writer.total_written:,} "
+        f"shards={writer.shard_idx} -> {out_dir}")

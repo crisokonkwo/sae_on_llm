@@ -64,3 +64,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    # HuggingFace streaming datasets keeps background threads alive after the iterator. Forcing exit.
+    sys.exit(0)
