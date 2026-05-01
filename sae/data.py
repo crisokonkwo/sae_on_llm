@@ -36,6 +36,7 @@ class HarvestConfig:
     dataset_split: str
     text_field: str
     max_samples: int | None
+    skip_samples: int
     output_dir: str
 
 
@@ -49,13 +50,20 @@ def _stream_text(
     split: str,
     text_field: str,
     max_samples: int | None = None,
+    skip_samples: int = 0,
 ) -> Iterator[str]:
     from datasets import load_dataset
 
     ds = load_dataset(dataset_name, dataset_config, split=split, streaming=True)
-    print(f"[harvest] streaming {dataset_name} config={dataset_config} split={split} field='{text_field}'")
-    it = ds.take(max_samples) if max_samples is not None else ds
-    for ex in it:
+    print(
+        f"[harvest] streaming {dataset_name} config={dataset_config} split={split} "
+        f"field='{text_field}' skip={skip_samples} take={max_samples}"
+    )
+    if skip_samples:
+        ds = ds.skip(skip_samples)
+    if max_samples is not None:
+        ds = ds.take(max_samples)
+    for ex in ds:
         text = ex.get(text_field)
         if text:
             yield text
@@ -141,20 +149,23 @@ def harvest_activations(cfg: HarvestConfig) -> None:
     with open(out_dir / "meta.json", "w") as f:
         json.dump(resolved, f, indent=2)
 
-    text_iter = _stream_text(cfg.dataset_name, cfg.dataset_config, cfg.dataset_split, cfg.text_field, cfg.max_samples,)
+    from tqdm.auto import tqdm
+
+    text_iter = _stream_text(
+        cfg.dataset_name, cfg.dataset_config, cfg.dataset_split, cfg.text_field,
+        cfg.max_samples, cfg.skip_samples)
 
     docs_seen = 0
     tokens_seen = 0
     skipped_empty = 0
 
-    
+    pbar = tqdm(text_iter, total=cfg.max_samples, unit="doc", desc="[harvest]", smoothing=0.05)
     with capture_residual_stream(model, layer_idx) as catcher:
-        for text in text_iter:
+        for text in pbar:
             ids = tokenizer.encode(text, add_special_tokens=True, truncation=True, max_length=cfg.seq_len)
             if not ids:
                 skipped_empty += 1
                 continue
-            # torch.cuda.empty_cache()
             input_ids = torch.tensor(ids, dtype=torch.long, device=device).unsqueeze(0)  # (1, T)
             model(input_ids=input_ids, use_cache=False)
             acts = catcher.activations  # (1, T, d_model)
@@ -166,7 +177,9 @@ def harvest_activations(cfg: HarvestConfig) -> None:
             docs_seen += 1
 
             if docs_seen % 50 == 0:
-                print(f"[harvest] docs={docs_seen} tokens={tokens_seen:,} shards={writer.shard_idx}")
+                # print(f"[harvest] docs={docs_seen} tokens={tokens_seen:,} shards={writer.shard_idx}")
+                pbar.set_postfix(tokens=f"{tokens_seen:,}", shards=writer.shard_idx)
+    pbar.close()
 
     writer.finalize()
     resolved["docs_processed"] = docs_seen
