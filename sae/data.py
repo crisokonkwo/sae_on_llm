@@ -154,7 +154,7 @@ def harvest_activations(cfg: HarvestConfig) -> None:
             if not ids:
                 skipped_empty += 1
                 continue
-            
+            # torch.cuda.empty_cache()
             input_ids = torch.tensor(ids, dtype=torch.long, device=device).unsqueeze(0)  # (1, T)
             model(input_ids=input_ids, use_cache=False)
             acts = catcher.activations  # (1, T, d_model)
