@@ -40,10 +40,10 @@ def middle_layer_index(model: nn.Module) -> int:
 
 
 class ResidualStreamCatcher:
-    """Captures the residual-stream tensor output by a chosen transformer block.
+    """Captures the residual-stream tensor output by a chosen transformer block (Full residual stream not post-MLP residual stream).
 
     HF decoder blocks return a tuple whose first element is the hidden state
-    of shape ``(batch, seq, d_model)`` — i.e. the residual stream after that
+    of shape ``(batch, seq_len, d_model)`` — i.e. the residual stream after that
     block. We grab it via a forward hook.
     """
 
@@ -53,13 +53,16 @@ class ResidualStreamCatcher:
         self.activations: torch.Tensor | None = None
 
     def _hook(self, _module, _inputs, output):
-        # Block output is typically a tuple (hidden_states, ...).
+        # Block output is typically a tuple (hidden_states, attn_weights, ); grab the hidden states. 
+        # Note that for some models (e.g. Llama) the block output is just the hidden states tensor, not a tuple.
+        print(f"[hook] captured output of shape {output[0].shape if isinstance(output, tuple) else output.shape}")
         hidden = output[0] if isinstance(output, tuple) else output
         # Detach + move to CPU later in the buffer; here just keep ref.
         self.activations = hidden
 
     def __enter__(self) -> "ResidualStreamCatcher":
         self._handle = self.block.register_forward_hook(self._hook)
+        print(self._handle)
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
