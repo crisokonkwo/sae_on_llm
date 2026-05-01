@@ -1,12 +1,12 @@
 # TODO
 
 Roadmap for building a modular Sparse Autoencoder (SAE) stack on Gemma-2B, with a
-TOFU-finetuned variant as the substrate for unlearning experiments.
+TOFU-finetuned variant as the foundation for unlearning experiments.
 
 ## Milestones
 
 ### M1 — SAE on Gemma-2B (base model)
-Goal: a working, modular SAE trained on a single residual-stream layer of Gemma-2B,
+Goal: a modular SAE trained on a single residual-stream layer of Gemma-2B,
 plus a demo of concept suppression via latent clamping.
 
 - [ ] **Activation harvesting**
@@ -84,38 +84,6 @@ for future unlearning-via-SAE-intervention work.
 - Top-k active features per token: small (e.g. 32–128) — separate from dictionary size;
   tune with L0 vs. recon trade-off.
 - Tokens of activations: start ~100M–500M tokens for the first real run; less for smoke tests.
-
-## Repo layout (proposed)
-
-```
-sae/
-  __init__.py
-  base.py            # SAE module, shared encode/decode
-  sparsity/
-    topk.py
-    l1.py            # stub
-    jumprelu.py      # stub
-    gated.py         # stub
-  train.py           # training loop
-  data.py            # activation buffer / streaming
-  hooks.py           # model hook utilities
-  eval.py            # recon, CE-delta, density, etc.
-  intervene.py       # clamping / steering utilities
-configs/
-  gemma2b_layerX_topk.yaml
-scripts/
-  harvest_activations.py
-  train_sae.py
-  eval_sae.py
-  suppress_concept_demo.py
-finetune/
-  tofu_finetune.py
-  configs/
-notebooks/
-  01_sae_sanity.ipynb
-  02_concept_suppression.ipynb
-  03_tofu_feature_probe.ipynb
-```
 
 ## Open questions / decisions to revisit
 
