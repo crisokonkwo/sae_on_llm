@@ -84,10 +84,10 @@ class SAE(nn.Module):
     def loss(
         self, x: torch.Tensor, x_hat: torch.Tensor, z: torch.Tensor, aux: dict[str, Any]
     ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-        """Compose total loss = reconstruction MSE + mode-specific terms."""
+        """Compute total loss = reconstruction MSE + mode-specific terms."""
         recon = ((x - x_hat) ** 2).mean()
         terms: dict[str, torch.Tensor] = {"recon": recon}
-        terms.update(self.sparsity.extra_loss(x=x, x_hat=x_hat, z=z, aux=aux, sae=self))
+        terms.update(self.sparsity.extra_loss(x=x, x_hat=x_hat, z=z, aux=aux, sae=self)) # add any mode-specific loss terms from the sparsity function, e.g. an L1 penalty or aux-k revival loss
         total = sum(terms.values())  # all already scaled by their coefficients
         terms["total"] = total
         return total, terms
