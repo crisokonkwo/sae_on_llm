@@ -121,12 +121,12 @@ class Trainer:
         compact = " ".join(
             f"{k}={v:.4g}" if isinstance(v, float) else f"{k}={v}" for k, v in record.items()
         )
-        line = f"[train] {compact}"
-        if self._pbar is not None:
-            # tqdm.write keeps the progress bar intact and renders cleanly above it.
-            self._pbar.write(line)
-        else:
-            print(line)
+        # line = f"[train] {compact}"
+        # if self._pbar is not None:
+        #     # tqdm.write keeps the progress bar intact and renders cleanly above it.
+        #     self._pbar.write(line)
+        # else:
+        #     print(line)
 
     def _dead_fraction(self) -> float:
         s = self.sae.sparsity
