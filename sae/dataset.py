@@ -84,6 +84,7 @@ class ActivationDataset(IterableDataset):
             for start in range(0, len(order), self.buffer_shards):
                 window = order[start : start + self.buffer_shards]
                 tensors = [torch.load(p, map_location="cpu") for p in window]
+                # print(f"[dataset] loaded window of {len(tensors)} shards: {[p.name for p in window]} -> {tensors[0].shape} ... {tensors[-1].shape}")
                 buf = torch.cat(tensors, dim=0)
                 if self.shuffle:
                     g = torch.Generator().manual_seed(self.seed + epoch * 10_000 + start)
