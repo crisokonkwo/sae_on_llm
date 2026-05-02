@@ -25,7 +25,7 @@ class SparsityFn(nn.Module):
     """
 
     def forward(self, pre: torch.Tensor) -> tuple[torch.Tensor, dict[str, Any]]:
-        raise NotImplementedError
+        raise NotImplementedError("SparsityFn subclasses (topk, l1, jumprelu, gated) must implement forward()")
 
     # The default contributes nothing.
     def extra_loss(
