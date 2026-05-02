@@ -45,6 +45,7 @@ class ActivationDataset(IterableDataset):
         seed: int = 0,
         infinite: bool = True,
         drop_last: bool = True,
+        progress: bool = True,
     ) -> None:
         super().__init__()
         self.shard_dir = Path(shard_dir)
@@ -54,6 +55,7 @@ class ActivationDataset(IterableDataset):
         self.seed = seed
         self.infinite = infinite # whether to loop infinitely over the dataset (default True, set to False for one epoch)
         self.drop_last = drop_last
+        self.progress = progress
         self.shards = list_shards(self.shard_dir)
         self.meta = load_meta(self.shard_dir)
 
@@ -69,14 +71,18 @@ class ActivationDataset(IterableDataset):
         rng.shuffle(order)
         return order
 
-    # Iterate over shards in buffer-sized windows, yielding batches until the buffer drains; then refill with the next shards.
+    # Iterate over shards in buffer-sized windows, yielding batches until the buffer drains; then refill.
     def __iter__(self) -> Iterator[torch.Tensor]:
+        from tqdm.auto import tqdm
+
         epoch = 0
+        n_windows = math.ceil(len(self.shards) / self.buffer_shards)
+        windows_loaded = 0  # cumulative across all epochs (only meaningful w/ progress=True)
+
         while True:
-            order = self._shard_order(epoch) # get shard order for this epoch (reshuffled each epoch if shuffle=True)
-            for start in range(0, len(order), self.buffer_shards): # iterate over shards in buffer-sized windows
+            order = self._shard_order(epoch)
+            for start in range(0, len(order), self.buffer_shards):
                 window = order[start : start + self.buffer_shards]
-                # print(f"[dataset] epoch {epoch} loading buffer shards {start}–{start+len(window)-1}: {[p.name for p in window]}")
                 tensors = [torch.load(p, map_location="cpu") for p in window]
                 buf = torch.cat(tensors, dim=0)
                 if self.shuffle:
@@ -84,11 +90,23 @@ class ActivationDataset(IterableDataset):
                     perm = torch.randperm(buf.shape[0], generator=g)
                     buf = buf[perm]
                 n = buf.shape[0]
-                # print(f"[dataset] epoch {epoch} buffer loaded with {n} rows and d_model={buf.shape[1]}")
-                # If drop_last is True, drop the last incomplete batch; otherwise, yield it as is.
+                windows_loaded += 1
+
+                if self.progress:
+                    shard_names = [p.name for p in window]
+                    msg = (
+                        f"[dataset] ep{epoch} window {start // self.buffer_shards + 1}/{n_windows} "
+                        f"(cum {windows_loaded})  rows={n}  d={buf.shape[1]}  shards={shard_names}"
+                    )
+                    # tqdm.write coexists cleanly with the trainer's progress bar.
+                    tqdm.write(msg)
+
+                # Yield batches from the buffer until it drains, then break to load the next window.
+                # If drop_last is True, drop the last batch if it's smaller than batch_size.
                 limit = (n // self.batch_size) * self.batch_size if self.drop_last else n
                 for i in range(0, limit, self.batch_size):
                     yield buf[i : i + self.batch_size]
+
             epoch += 1
             if not self.infinite:
                 return

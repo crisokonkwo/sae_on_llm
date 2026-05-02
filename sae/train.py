@@ -43,6 +43,7 @@ class TrainConfig:
     ckpt_every: int = 2000
     seed: int = 0
     init_b_dec_from_data: bool = True
+    progress: bool = True
     # device / dtype
     device: str = "cuda"
     compute_dtype: str = "float32"  # SAE is small; fp32 is fine and stable
@@ -111,6 +112,8 @@ class Trainer:
         with open(self.out_dir / "config.json", "w") as f:
             json.dump({"sae": asdict(sae_cfg), "train": asdict(train_cfg)}, f, indent=2)
 
+        self._pbar = None  # set during train(); used by _log to avoid clobbering the bar
+
     # ------------------------------------------------------------------
     def _log(self, record: dict[str, Any]) -> None:
         with open(self.metrics_path, "a") as f:
@@ -118,7 +121,12 @@ class Trainer:
         compact = " ".join(
             f"{k}={v:.4g}" if isinstance(v, float) else f"{k}={v}" for k, v in record.items()
         )
-        print(f"[train] {compact}")
+        line = f"[train] {compact}"
+        if self._pbar is not None:
+            # tqdm.write keeps the progress bar intact and renders cleanly above it.
+            self._pbar.write(line)
+        else:
+            print(line)
 
     def _dead_fraction(self) -> float:
         s = self.sae.sparsity
@@ -129,10 +137,20 @@ class Trainer:
 
     # ------------------------------------------------------------------
     def train(self, batches: Iterable[torch.Tensor], start_step: int = 0) -> None:
+        from tqdm.auto import tqdm
+
         torch.manual_seed(self.cfg.seed)
         self.sae.train()
         step = start_step
         t0 = time.time()
+
+        total_steps = max(1, self.cfg.max_steps - start_step)
+        self._pbar = (
+            tqdm(total=total_steps, desc="[train]", unit="step",
+                 initial=0, position=0, smoothing=0.05, dynamic_ncols=True)
+            if self.cfg.progress
+            else None
+        )
 
         for raw in batches:
             x = raw.to(self.device, dtype=self.dtype, non_blocking=True) # (B, d_model)
@@ -164,14 +182,27 @@ class Trainer:
                         "tok_per_s": float((step - start_step + 1) * x.shape[0] / max(time.time() - t0, 1e-6)),
                     }
                     self._log(record)
+                    if self._pbar is not None:
+                        self._pbar.set_postfix(
+                            loss=f"{record['loss']:.4f}",
+                            recon=f"{record['recon']:.4f}",
+                            ev=f"{record['ev']:.3f}",
+                            l0=f"{record['l0']:.1f}",
+                            dead=f"{record['dead_frac']:.2f}",
+                        )
 
             if step > 0 and step % self.cfg.ckpt_every == 0:
                 save_checkpoint(self.out_dir / f"ckpt_step{step:07d}.pt", self.sae, self.optimizer, step, self.sae_cfg, self.cfg)
 
             step += 1
+            if self._pbar is not None:
+                self._pbar.update(1)
             if step >= self.cfg.max_steps:
                 break
 
+        if self._pbar is not None:
+            self._pbar.close()
+            self._pbar = None
         save_checkpoint(self.out_dir / "ckpt_final.pt", self.sae, self.optimizer, step, self.sae_cfg, self.cfg)
         print(f"[train] done. final step={step}  out={self.out_dir}")
 

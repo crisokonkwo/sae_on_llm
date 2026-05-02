@@ -52,6 +52,7 @@ class SAE(nn.Module):
         if cfg.tie_decoder_init:
             self.W_enc = nn.Parameter(W_dec.detach().T.contiguous().clone())
         else:
+            # Standard random init scaled by 1/sqrt(d) which is good for training
             W_enc = torch.randn(d, n) * (1.0 / d**0.5)
             self.W_enc = nn.Parameter(W_enc)
 

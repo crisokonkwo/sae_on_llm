@@ -51,6 +51,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--ce-dataset-split", default="train")
     p.add_argument("--ce-text-field", default="text")
     p.add_argument("--ce-max-docs", type=int, default=32)
+    p.add_argument("--ce-skip-docs", type=int, default=0,
+                   help="Skip the first N docs of the stream. Use to ensure CE-delta / interp text is held out from training.")
     p.add_argument("--ce-seq-len", type=int, default=512)
     # top-activating tokens
     p.add_argument("--n-features-to-probe", type=int, default=16,
@@ -111,59 +113,61 @@ def main() -> None:
         if isinstance(v, (int, float)):
             print(f"        {k}={v:.6g}" if isinstance(v, float) else f"        {k}={v}")
 
-    # # 2/3. CE-delta + top-activating tokens (require the LM).
-    # if args.model is not None:
-    #     from transformers import AutoModelForCausalLM, AutoTokenizer
-    #     from sae.data import _stream_text  # internal helper, fine to reuse
+    # 2/3. CE-delta + top-activating tokens (require the LM).
+    if args.model is not None:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from sae.data import _stream_text  # internal helper, fine to reuse
 
-    #     meta = load_meta(args.shard_dir)
-    #     layer_idx = args.layer if args.layer is not None else meta.get("resolved_layer_idx")
-    #     if layer_idx is None:
-    #         raise ValueError("--layer not given and not found in shard meta.json")
+        meta = load_meta(args.shard_dir)
+        layer_idx = args.layer if args.layer is not None else meta.get("resolved_layer_idx")
+        if layer_idx is None:
+            raise ValueError("--layer not given and not found in shard meta.json")
 
-    #     print(f"[eval] loading LM {args.model} (layer={layer_idx})")
-    #     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    #     model = AutoModelForCausalLM.from_pretrained(
-    #         args.model, torch_dtype=dtype, device_map=device
-    #     )
-    #     model.eval()
+        print(f"[eval] loading LM {args.model} (layer={layer_idx})")
+        tokenizer = AutoTokenizer.from_pretrained(args.model)
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model, torch_dtype=dtype, device_map=device
+        )
+        model.eval()
 
-    #     # CE delta
-    #     print(f"[eval] CE-delta on {args.ce_max_docs} docs from {args.ce_dataset}")
-    #     texts = list(_stream_text(
-    #         args.ce_dataset, args.ce_dataset_config, args.ce_dataset_split,
-    #         args.ce_text_field, max_samples=args.ce_max_docs,
-    #     ))
-    #     report["ce_delta"] = ce_delta(
-    #         sae, model, tokenizer, layer_idx, texts,
-    #         seq_len=args.ce_seq_len, max_docs=args.ce_max_docs, device=device,
-    #     )
-    #     for k, v in report["ce_delta"].items():
-    #         print(f"        {k}={v:.4f}" if isinstance(v, float) else f"        {k}={v}")
+        # CE delta
+        print(f"[eval] CE-delta on {args.ce_max_docs} docs from {args.ce_dataset}")
+        texts = list(_stream_text(
+            args.ce_dataset, args.ce_dataset_config, args.ce_dataset_split,
+            args.ce_text_field, max_samples=args.ce_max_docs,
+            skip_samples=args.ce_skip_docs,
+        ))
+        report["ce_delta"] = ce_delta(
+            sae, model, tokenizer, layer_idx, texts,
+            seq_len=args.ce_seq_len, max_docs=args.ce_max_docs, device=device,
+        )
+        for k, v in report["ce_delta"].items():
+            print(f"        {k}={v:.4f}" if isinstance(v, float) else f"        {k}={v}")
 
-    #     # Top-activating tokens for a sample of features.
-    #     gen = torch.Generator().manual_seed(0)
-    #     feat_ids = torch.randperm(sae.cfg.n_features, generator=gen)[: args.n_features_to_probe].tolist()
-    #     print(f"[eval] top-activating tokens for features {feat_ids[:5]}{'...' if len(feat_ids) > 5 else ''}")
-    #     interp_texts = list(_stream_text(
-    #         args.ce_dataset, args.ce_dataset_config, args.ce_dataset_split,
-    #         args.ce_text_field, max_samples=args.interp_max_docs,
-    #     ))
-    #     top_tokens = top_activating_tokens(
-    #         sae, model, tokenizer, layer_idx, interp_texts,
-    #         feature_ids=feat_ids, top_k=args.top_k_tokens,
-    #         seq_len=args.interp_seq_len, max_docs=args.interp_max_docs,
-    #         device=device,
-    #     )
-    #     # Convert int keys to str for JSON.
-    #     report["top_activating_tokens"] = {str(f): hits for f, hits in top_tokens.items()}
-    # else:
-    #     print("[eval] --model not given; skipping CE-delta + top-activating-token sections.")
+        # Top-activating tokens for a sample of features.
+        gen = torch.Generator().manual_seed(0)
+        feat_ids = torch.randperm(sae.cfg.n_features, generator=gen)[: args.n_features_to_probe].tolist()
+        print(f"[eval] top-activating tokens for features {feat_ids[:5]}{'...' if len(feat_ids) > 5 else ''}")
+        interp_texts = list(_stream_text(
+            args.ce_dataset, args.ce_dataset_config, args.ce_dataset_split,
+            args.ce_text_field, max_samples=args.interp_max_docs,
+            skip_samples=args.ce_skip_docs,
+        ))
+        top_tokens = top_activating_tokens(
+            sae, model, tokenizer, layer_idx, interp_texts,
+            feature_ids=feat_ids, top_k=args.top_k_tokens,
+            seq_len=args.interp_seq_len, max_docs=args.interp_max_docs,
+            device=device,
+        )
+        # Convert int keys to str for JSON.
+        report["top_activating_tokens"] = {str(f): hits for f, hits in top_tokens.items()}
+    else:
+        print("[eval] --model not given; skipping CE-delta + top-activating-token sections.")
 
-    # out_path = out / "eval_report.json"
-    # with open(out_path, "w") as f:
-    #     json.dump(report, f, indent=2)
-    # print(f"[eval] wrote {out_path}")
+    out_path = out / "eval_report.json"
+    with open(out_path, "w") as f:
+        json.dump(report, f, indent=2)
+    print(f"[eval] wrote {out_path}")
 
 
 if __name__ == "__main__":
