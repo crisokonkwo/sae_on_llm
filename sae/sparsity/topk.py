@@ -78,7 +78,9 @@ class TopK(SparsityFn):
         if not self.training:
             return {}
         dead = (self.step - self.last_fired) > self.dead_steps_threshold  # (n_features,)
+        # print(f"[TopK.extra_loss] step={self.step.item()} (self.step - self.last_fired)={self.step - self.last_fired}  dead={dead}  n_dead={(dead.sum().item())}  k_aux={self.k_aux}")
         n_dead = int(dead.sum().item())
+        # print(f"[TopK.extra_loss] step={self.step.item()}  n_dead={n_dead}  dead_fraction={n_dead / self.n_features:.4f} k_aux={self.k_aux}")
         if n_dead < self.k_aux:
             return {"aux_k": x.new_zeros(())}
 
