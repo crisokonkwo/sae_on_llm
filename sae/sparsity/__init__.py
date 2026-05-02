@@ -26,6 +26,7 @@ _REGISTRY: dict[str, type[SparsityFn]] = {
 def build_sparsity(mode: str, n_features: int, **kwargs: Any) -> SparsityFn:
     if mode not in _REGISTRY:
         raise ValueError(f"Unknown sparsity mode '{mode}'. Available: {sorted(_REGISTRY)}")
+    # print(f"[build_sparsity] Building sparsity mode '{mode}' with n_features={n_features} and kwargs={kwargs}")
     return _REGISTRY[mode](n_features=n_features, **kwargs)
 
 
