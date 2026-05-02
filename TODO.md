@@ -85,6 +85,38 @@ for future unlearning-via-SAE-intervention work.
   tune with L0 vs. recon trade-off.
 - Tokens of activations: start ~100M–500M tokens for the first real run; less for smoke tests.
 
+## Repo layout (proposed)
+
+```
+sae/
+  __init__.py
+  base.py            # SAE module, shared encode/decode
+  sparsity/
+    topk.py
+    l1.py            # stub
+    jumprelu.py      # stub
+    gated.py         # stub
+  train.py           # training loop
+  data.py            # activation buffer / streaming
+  hooks.py           # model hook utilities
+  eval.py            # recon, CE-delta, density, etc.
+  intervene.py       # clamping / steering utilities
+configs/
+  gemma2b_layerX_topk.yaml
+scripts/
+  harvest_activations.py
+  train_sae.py
+  eval_sae.py
+  suppress_concept_demo.py
+finetune/
+  tofu_finetune.py
+  configs/
+notebooks/
+  01_sae_sanity.ipynb
+  02_concept_suppression.ipynb
+  03_tofu_feature_probe.ipynb
+```
+
 ## Open questions / decisions to revisit
 
 - Which layer to target first? (Mid-network is the usual default; revisit after M1.)
