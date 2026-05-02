@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
                    help="Output root. Creates ./{train,val,test} underneath.")
     p.add_argument("--model", default="google/gemma-2-2b")
     p.add_argument("--layer", type=int, default=-1)
-    p.add_argument("--seq-len", type=int, default=1024)
+    p.add_argument("--seq-len", type=int, default=256)
     p.add_argument("--tokens-per-shard", type=int, default=500_000)
     p.add_argument("--dtype", default="bfloat16", choices=["float16", "bfloat16", "float32"])
     p.add_argument("--dataset", default="HuggingFaceFW/fineweb-edu")
