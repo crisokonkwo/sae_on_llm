@@ -45,7 +45,7 @@ plus a demo of concept suppression via latent clamping.
         during the forward pass.
   - [ ] Implement conditional clamping. Paper: "Don’t Forget It! Conditional Sparse Autoencoder Clamping Works for
         Unlearning."
-  - [ ] Implement Dynamic Sparse Autoencoder Guardrails Paper: "SAEs Can Improve Unlearning: Dynamic Sparse Autoencoder 
+  - [ ] Implement Dynamic Sparse Autoencoder Guardrails Paper: "SAEs Can Improve Unlearning: Dynamic Sparse Autoencoder
         Guardrails for Precision Unlearning in LLMs."
   - [ ] Notebook showing pre/post generations and a small quantitative check
         (e.g. probability mass on concept tokens).
