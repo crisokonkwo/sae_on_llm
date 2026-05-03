@@ -65,9 +65,9 @@ def parse_args() -> argparse.Namespace:
                    help="Optional: pull resolved_layer_idx from this dir's meta.json.")
     # concept search
     p.add_argument("--concept-prompts", nargs="+", required=True,
-                   help="Texts containing the concept (literal strings or file paths).")
+                   help="Texts containing the concept (literal strings or file paths).") # Required: need some signal to discover features.
     p.add_argument("--negative-prompts", nargs="*", default=None,
-                   help="Texts WITHOUT the concept, for differential ranking.")
+                   help="Texts WITHOUT the concept, for differential ranking.") # Optional: if not given, just rank by mean activation on the concept prompts.
     p.add_argument("--top-n", type=int, default=6,
                    help="How many features to clamp.")
     p.add_argument("--score", default="mean_act_diff",
@@ -78,7 +78,7 @@ def parse_args() -> argparse.Namespace:
                    help="Value to force the chosen features to (0 = ablate).")
     # generation
     p.add_argument("--gen-prompts", nargs="+", required=True,
-                   help="Prompts to generate from for the qualitative comparison.")
+                   help="Prompts to generate from for the qualitative comparison.") # Required: need some prompts to see the effect of suppression.
     p.add_argument("--max-new-tokens", type=int, default=40)
     p.add_argument("--temperature", type=float, default=0.0,
                    help="0 = greedy. Otherwise sampling temperature.")
