@@ -6,6 +6,7 @@ TOFU-finetuned variant as the foundation for unlearning experiments.
 ## Milestones
 
 ### M1 — SAE on Gemma-2B (base model)
+
 Goal: a modular SAE trained on a single residual-stream layer of Gemma-2B,
 plus a demo of concept suppression via latent clamping.
 
@@ -46,6 +47,7 @@ plus a demo of concept suppression via latent clamping.
         (e.g. probability mass on concept tokens).
 
 ### M2 — Reproducible SAE training pipeline
+
 Goal: turn M1 into a config-driven pipeline we can re-run on any checkpoint of Gemma-2B.
 
 - [ ] Single entry point `train_sae.py --config configs/gemma2b_layerX_topk.yaml`.
@@ -57,6 +59,7 @@ Goal: turn M1 into a config-driven pipeline we can re-run on any checkpoint of G
 - [ ] Documented procedure: "given a Gemma-2B checkpoint, fit an SAE in N steps."
 
 ### M3 — TOFU finetuning of Gemma-2B
+
 Goal: a Gemma-2B checkpoint finetuned on TOFU, used as the unlearning starting point.
 
 - [ ] Pull TOFU dataset (`locuslab/TOFU`) and inspect splits (`full`, `forget*`, `retain*`).
@@ -67,6 +70,7 @@ Goal: a Gemma-2B checkpoint finetuned on TOFU, used as the unlearning starting p
 - [ ] Sanity-check: model answers TOFU author questions correctly post-FT.
 
 ### M4 — SAEs on the TOFU-finetuned model (bridge to unlearning)
+
 Goal: re-fit SAEs on `gemma2b-tofu-ft` using the M2 pipeline; this is the substrate
 for future unlearning-via-SAE-intervention work.
 
@@ -85,29 +89,35 @@ for future unlearning-via-SAE-intervention work.
   tune with L0 vs. recon trade-off.
 - Tokens of activations: start ~100M–500M tokens for the first real run; less for smoke tests.
 
-## Repo layout (proposed)
+## Repo layout
 
-```
+```text
 sae/
   __init__.py
   base.py            # SAE module, shared encode/decode
   sparsity/
+    __init__.py
+    base.py
     topk.py
     l1.py            # stub
     jumprelu.py      # stub
     gated.py         # stub
   train.py           # training loop
   data.py            # activation buffer / streaming
+  dataset.py         # read sharded activations
   hooks.py           # model hook utilities
   eval.py            # recon, CE-delta, density, etc.
   intervene.py       # clamping / steering utilities
+  plotting.py        # sae plot utilities
 configs/
   gemma2b_layerX_topk.yaml
 scripts/
   harvest_activations.py
+  harvest_splits.py
   train_sae.py
   eval_sae.py
-  suppress_concept_demo.py
+  suppress_concept.py
+  plot_metrics.py
 finetune/
   tofu_finetune.py
   configs/
