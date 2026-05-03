@@ -111,18 +111,16 @@ scripts/
 finetune/
   tofu_finetune.py
   configs/
-notebooks/
-  01_sae_sanity.ipynb
-  02_concept_suppression.ipynb
-  03_tofu_feature_probe.ipynb
 ```
 
 ## Open questions / decisions to revisit
 
-- Which layer to target first? (Mid-network is the usual default; revisit after M1.)
+- Which layer to target first? (Mid-network is the usual default.)
 - LoRA vs. full finetune for TOFU?
 - Dataset for activation harvesting on the FT model — include TOFU text or keep generic?
 - When to bring up `JumpReLU` / `GatedSAE` — likely after Top-k baseline is solid.
+
+## Configuration for haversting, training, evaluating, and ploting
 
 python scripts/harvest_splits.py --model google/gemma-2-2b --layer -1 --root activations/gemma2b_mid_pile --train-size 50000 --val-size 2000 --test-size 2000 --seq-len 1024 --tokens-per-shard 500000 --dtype bfloat16 --dataset monology/pile-uncopyrighted --dataset-config default
 
