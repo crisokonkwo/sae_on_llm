@@ -32,6 +32,7 @@ import torch
 from sae import SAE, SAEConfig
 from sae.dataset import load_meta
 from sae.hooks import patch_residual_stream
+from sae.eval import top_activating_tokens
 from sae.intervene import (
     ConceptScore,
     find_concept_features,
@@ -76,6 +77,10 @@ def parse_args() -> argparse.Namespace:
                    help="Skip discovery and clamp these features explicitly.")
     p.add_argument("--clamp-value", type=float, default=0.0,
                    help="Value to force the chosen features to (0 = ablate).")
+    p.add_argument("--top-token-examples", type=int, default=5,
+                   help="For each clamped feature, store this many top-activating token examples in the report.")
+    p.add_argument("--top-token-context", type=int, default=8,
+                   help="Left/right context window for top-activating token examples.")
     # generation
     p.add_argument("--gen-prompts", nargs="+", required=True,
                    help="Prompts to generate from for the qualitative comparison.") # Required: need some prompts to see the effect of suppression.
@@ -175,10 +180,27 @@ def main() -> None:
 
     feature_ids = [f.feature_id for f in features]
 
-    # 2. Build clamp hook
+    # 2. Store the top-activating tokens for the chosen features on the concept corpus.
+    # This makes the JSON report self-contained: for each suppressed feature,
+    # you can inspect the tokens/contexts that caused it to fire.
+    print(f"[suppress] collecting top-activating token examples for features {feature_ids}")
+    feature_token_examples = top_activating_tokens(
+        sae, model, tokenizer, layer_idx,
+        texts=concept_texts,
+        feature_ids=feature_ids,
+        top_k=args.top_token_examples,
+        seq_len=256,
+        max_docs=len(concept_texts),
+        context=args.top_token_context,
+        device=device,
+    )
+    # JSON wants string keys.
+    feature_token_examples_json = {str(k): v for k, v in feature_token_examples.items()}
+
+    # 3. Build clamp hook
     clamp_fn = make_clamp_fn(sae, feature_ids, clamp_values=args.clamp_value)
 
-    # 3. Generate clean vs. suppressed for each prompt
+    # 4. Generate clean vs. suppressed for each prompt
     print("\n[suppress] generating ...")
     generations = []
     for prompt in gen_prompts:
@@ -210,7 +232,7 @@ def main() -> None:
         print(f"--- Δlog p(clean continuation) per token: {delta_per_tok:+.4f} nats "
               f"(over {n_tok} tokens)")
 
-    # 4. Write report
+    # 5. Write report
     report = {
         "ckpt": str(args.ckpt),
         "model": args.model,
@@ -221,6 +243,7 @@ def main() -> None:
         "score_type": args.score,
         "clamp_value": args.clamp_value,
         "features": [asdict(f) for f in features],
+        "feature_token_examples": feature_token_examples_json,
         "generations": generations,
         "summary": {
             "mean_logprob_delta_per_token": (
@@ -239,7 +262,18 @@ def main() -> None:
           f"- model: `{args.model}`  layer: `{layer_idx}`",
           f"- features clamped to {args.clamp_value}: `{feature_ids}`",
           f"- mean Δlog p per token: **{report['summary']['mean_logprob_delta_per_token']:+.4f} nats**",
+          "",
+          "## Feature token examples",
           ""]
+    for f in features:
+        md.append(f"### Feature {f.feature_id}")
+        for hit in feature_token_examples_json.get(str(f.feature_id), [])[: args.top_token_examples]:
+            md.append(
+                f"- act={hit['activation']:.3f}, token=`{hit['token']}`, "
+                f"context={hit['context']!r}"
+            )
+        md.append("")
+
     for g in generations:
         md += [
             f"## Prompt: `{g['prompt']!r}`",
