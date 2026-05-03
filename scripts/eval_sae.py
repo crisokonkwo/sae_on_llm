@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--ce-dataset-config", default="sample-10BT")
     p.add_argument("--ce-dataset-split", default="train")
     p.add_argument("--ce-text-field", default="text")
-    p.add_argument("--ce-max-docs", type=int, default=32)
+    p.add_argument("--ce-max-docs", type=int, default=32) # adjust as needed; 32 docs should be enough to get a stable CE-delta estimate, but you can increase for more confidence.
     p.add_argument("--ce-skip-docs", type=int, default=0,
                    help="Skip the first N docs of the stream. Use to ensure CE-delta / interp text is held out from training.")
     p.add_argument("--ce-seq-len", type=int, default=512)
@@ -113,7 +113,7 @@ def main() -> None:
         if isinstance(v, (int, float)):
             print(f"        {k}={v:.6g}" if isinstance(v, float) else f"        {k}={v}")
 
-    # 2/3. CE-delta + top-activating tokens (require the LM).
+    # 2&3. CE-delta + top-activating tokens (require the LM).
     if args.model is not None:
         from transformers import AutoModelForCausalLM, AutoTokenizer
         from sae.data import _stream_text  # internal helper, fine to reuse
@@ -130,7 +130,7 @@ def main() -> None:
         )
         model.eval()
 
-        # CE delta
+        # CE delta 
         print(f"[eval] CE-delta on {args.ce_max_docs} docs from {args.ce_dataset}")
         texts = list(_stream_text(
             args.ce_dataset, args.ce_dataset_config, args.ce_dataset_split,

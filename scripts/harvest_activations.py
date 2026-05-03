@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
         default=-1,
         help="Transformer block index to hook. Gemma‑2‑2B has 26 transformer layers indexed 0–25; -1 calls the middle layer function.",
     )
-    p.add_argument("--seq-len", type=int, default=1024,
+    p.add_argument("--seq-len", type=int, default=256,
                    help="Per-document truncation length (one doc per forward pass).")
     p.add_argument("--tokens-per-shard", type=int, default=500_000)
     p.add_argument("--dtype", default="bfloat16", choices=["float16", "bfloat16", "float32"])

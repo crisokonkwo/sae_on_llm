@@ -123,3 +123,9 @@ notebooks/
 - LoRA vs. full finetune for TOFU?
 - Dataset for activation harvesting on the FT model — include TOFU text or keep generic?
 - When to bring up `JumpReLU` / `GatedSAE` — likely after Top-k baseline is solid.
+
+python scripts/harvest_splits.py --model google/gemma-2-2b --dataset monology/pile-uncopyrighted --dataset-config default --layer -1 --root activations/gemma2b_mid_pile --train-size 30000 --val-size 3000 --test-size 3000
+
+python scripts/train_sae.py --shard-dir activations/gemma2b_mid_pile --output-dir runs/gemma2b_mid_pile_topk/run_train --sparsity-mode topk --k 64 --max-steps 20000 --batch-size 1024 --buffer-shards 1 --log-every 50 --ckpt-every 2000
+
+python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk/run_train/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/train --output runs/gemma2b_mid_pile_topk/eval_train --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 1024 --ce-max-docs 64 --ce-skip-docs 0
