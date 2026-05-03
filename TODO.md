@@ -122,14 +122,14 @@ finetune/
 
 ## Configuration for haversting, training, evaluating, and ploting
 
-python scripts/harvest_splits.py --model google/gemma-2-2b --layer -1 --root activations/gemma2b_mid_pile --train-size 50000 --val-size 2000 --test-size 2000 --seq-len 1024 --tokens-per-shard 500000 --dtype bfloat16 --dataset monology/pile-uncopyrighted --dataset-config default
+- python scripts/harvest_splits.py --model google/gemma-2-2b --layer -1 --root activations/gemma2b_mid_pile --train-size 50000 --val-size 2000 --test-size 2000 --seq-len 1024 --tokens-per-shard 500000 --dtype bfloat16 --dataset monology/pile-uncopyrighted --dataset-config default
 
-python scripts/train_sae.py --shard-dir activations/gemma2b_mid_pile --output-dir runs/gemma2b_mid_pile_topk_8d/run_1 --sparsity-mode topk --k 64 --n-features 18432 --batch-size 4096 --buffer-shards 4 --lr 3e-4 --warmup-steps 500 --max-steps 12000 --log-every 50 --ckpt-every 4000 --compute-dtype float32 --device cuda
+- python scripts/train_sae.py --shard-dir activations/gemma2b_mid_pile --output-dir runs/gemma2b_mid_pile_topk_8d/run_1 --sparsity-mode topk --k 64 --n-features 18432 --batch-size 4096 --buffer-shards 4 --lr 3e-4 --warmup-steps 500 --max-steps 12000 --log-every 50 --ckpt-every 4000 --compute-dtype float32 --device cuda
 
-python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk_8d/run_1/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/train --output runs/gemma2b_mid_pile_topk_8d/run_1/eval_train --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 2048 --max-batches 100 --ce-max-docs 64 --ce-dataset monology/pile-uncopyrighted --ce-dataset-config default --ce-skip-docs 0
+- python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk_8d/run_1/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/train --output runs/gemma2b_mid_pile_topk_8d/run_1/eval_train --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 2048 --max-batches 100 --ce-max-docs 64 --ce-dataset monology/pile-uncopyrighted --ce-dataset-config default --ce-skip-docs 0
 
-python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk_8d/run_1/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/val --output runs/gemma2b_mid_pile_topk_8d/run_1/eval_val --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 2048 --max-batches 100 --ce-max-docs 64 --ce-dataset monology/pile-uncopyrighted --ce-dataset-config default --ce-skip-docs 50000
+- python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk_8d/run_1/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/val --output runs/gemma2b_mid_pile_topk_8d/run_1/eval_val --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 2048 --max-batches 100 --ce-max-docs 64 --ce-dataset monology/pile-uncopyrighted --ce-dataset-config default --ce-skip-docs 50000
 
-python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk_8d/run_1/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/test --output runs/gemma2b_mid_pile_topk_8d/run_1/eval_test --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 2048 --max-batches 100 --ce-max-docs 64 --ce-dataset monology/pile-uncopyrighted --ce-dataset-config default --ce-skip-docs 52000
+- python scripts/eval_sae.py --ckpt runs/gemma2b_mid_pile_topk_8d/run_1/ckpt_final.pt --shard-dir activations/gemma2b_mid_pile/test --output runs/gemma2b_mid_pile_topk_8d/run_1/eval_test --model google/gemma-2-2b --compute-dtype bfloat16 --batch-size 2048 --max-batches 100 --ce-max-docs 64 --ce-dataset monology/pile-uncopyrighted --ce-dataset-config default --ce-skip-docs 52000
 
-python scripts/plot_metrics.py --train run1=runs/gemma2b_mid_pile_topk_8d/run_1 --eval  train=runs/gemma2b_mid_pile_topk_8d/run_1/eval_train val=runs/gemma2b_mid_pile_topk_8d/run_1/eval_val test=runs/gemma2b_mid_pile_topk_8d/run_1/eval_test --output runs/gemma2b_mid_pile_topk_8d/run_1/plots
+- python scripts/plot_metrics.py --train run1=runs/gemma2b_mid_pile_topk_8d/run_1 --eval  train=runs/gemma2b_mid_pile_topk_8d/run_1/eval_train val=runs/gemma2b_mid_pile_topk_8d/run_1/eval_val test=runs/gemma2b_mid_pile_topk_8d/run_1/eval_test --output runs/gemma2b_mid_pile_topk_8d/run_1/plots
