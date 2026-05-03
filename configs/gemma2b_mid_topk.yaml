@@ -1,0 +1,51 @@
+# Reproducible SAE training config for Gemma-2-2B, middle-layer residual stream.
+# Run:
+#   python scripts/train_sae.py --config configs/gemma2b_mid_topk.yaml
+
+output_dir: runs/gemma2b_mid_pile_topk/run_1
+
+model:
+  name: google/gemma-2-2b
+  # -1 means "middle layer" during harvesting; after harvesting the resolved index is recorded in meta.json.
+  layer_idx: -1
+  # residual stream after the transformer layer's computations (post-attention, post-MLP).
+  hook_point: resid_post
+
+data:
+  # Can be either a direct shard dir or a splits root with train/val/test subdirs.
+  shard_dir: activations/gemma2b_mid_pile
+  # If omitted and shard_dir/val exists, train_sae.py auto-detects it.
+  val_shard_dir: null
+  batch_size: 4096
+  buffer_shards: 4
+
+sae:
+  # d_model defaults to train meta.json -> resolved_d_model.
+  d_model: null
+  expansion_factor: 8       # n_features = 8 * d_model if n_features is null
+  n_features: null
+  sparsity_mode: topk
+  topk:
+    k: 64
+    k_aux: null
+    aux_coef: 0.03125       # 1/32
+    dead_steps_threshold: 1000
+
+train:
+  lr: 0.0003
+  warmup_steps: 500
+  max_steps: 12000
+  grad_clip: 1.0
+  log_every: 50
+  ckpt_every: 4000
+  seed: 0
+  device: cuda
+  compute_dtype: float32
+  progress: true
+  resume: null
+
+validation:
+  validate_after: true
+  max_batches: 200
+  batch_size: 2048
+  plot_after: true
