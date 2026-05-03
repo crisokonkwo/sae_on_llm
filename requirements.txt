@@ -1,5 +1,5 @@
 # This file lists the dependencies for the project. You can install them using pip:
-# pip install -r requirements.txt
+# pip install -r requirements.txt if using pip switch pytorch to torch
 #or conda:
 # conda install --file requirements.txt
 # Make sure to have Python 3.8 or higher installed.
