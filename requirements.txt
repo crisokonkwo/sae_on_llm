@@ -11,4 +11,5 @@ safetensors>=0.4
 huggingface_hub>=0.23
 numpy
 tqdm
+pyyaml
 matplotlib

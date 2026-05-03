@@ -10,39 +10,43 @@ TOFU-finetuned variant as the foundation for unlearning experiments.
 Goal: a modular SAE trained on a single residual-stream layer of Gemma-2B,
 plus a demo of concept suppression via latent clamping.
 
-- [ ] **Activation harvesting**
-  - [ ] Load Gemma-2B (HF / transformer_lens) and pick one layer's residual stream
+- [x] **Activation harvesting**
+  - [x] Load Gemma-2B (HF / transformer_lens) and pick one layer's residual stream
         (start mid-network, e.g. layer ~13).
-  - [ ] Stream a text corpus (e.g. OpenWebText / The Pile slice / FineWeb-Edu sample)
+  - [x] Stream a text corpus (e.g. OpenWebText / The Pile slice / FineWeb-Edu sample)
         through the model and cache `(N, d_model)` activations.
-  - [ ] Shuffled, sharded activation buffer for training (disk + RAM buffer).
+  - [x] Shuffled, sharded activation buffer for training (disk + RAM buffer).
 
-- [ ] **SAE core (modular)**
-  - [ ] Base `SAE` module: encoder `W_enc`, decoder `W_dec` (unit-norm cols), bias `b_dec` pre-subtracted.
-  - [ ] Config-driven sparsity backend: `mode ∈ {l1, topk, jumprelu, gated}`.
-  - [ ] **Implement Top-k first** (`k = 8·d` or `16·d`, where `d = d_model = 2304`).
-  - [ ] Stubs / interfaces for `l1`, `jumprelu`, `gated` so they can be added without refactor.
-  - [ ] Decoder weight tying option, decoder-norm constraint, dead-latent re-init.
+- [x] **SAE core (modular)**
+  - [x] Base `SAE` module: encoder `W_enc`, decoder `W_dec` (unit-norm cols), bias `b_dec` pre-subtracted.
+  - [x] Config-driven sparsity backend: `mode ∈ {l1, topk, jumprelu, gated}`.
+  - [x] **Implement Top-k first** (`k = 8·d` or `16·d`, where `d = d_model = 2304`).
+  - [x] Stubs / interfaces for `l1`, `jumprelu`, `gated` so they can be added without refactor.
+  - [x] Decoder weight tying option, decoder-norm constraint, dead-latent re-init.
 
 - [ ] **Training pipeline**
-  - [ ] Loss = reconstruction MSE (+ sparsity term per mode).
-  - [ ] Auxiliary `aux_k` loss for Top-k (revives dead latents).
-  - [ ] Optimizer: Adam, learning-rate warmup, decoder column re-norm step.
+  - [x] Loss = reconstruction MSE (+ sparsity term per mode).
+  - [x] Auxiliary `aux_k` loss for Top-k (revives dead latents).
+  - [x] Optimizer: Adam, learning-rate warmup, decoder column re-norm step.
   - [ ] Logging: recon loss, explained variance, L0, fraction dead latents,
         feature density histogram (wandb or simple TB/CSV).
-  - [ ] Checkpointing + resumable training.
+  - [x] Checkpointing + resumable training.
 
-- [ ] **Evaluation / validation**
-  - [ ] Held-out reconstruction MSE and explained variance.
-  - [ ] Cross-entropy delta when SAE-reconstructed activations are spliced back in.
-  - [ ] L0, dead-feature count, feature-density histogram sanity checks.
-  - [ ] Quick interpretability pass: top-activating tokens for a handful of features.
+- [x] **Evaluation / validation**
+  - [x] Held-out reconstruction MSE and explained variance.
+  - [x] Cross-entropy delta when SAE-reconstructed activations are spliced back in.
+  - [x] L0, dead-feature count, feature-density histogram sanity checks.
+  - [x] Quick interpretability pass: top-activating tokens for a handful of features.
 
 - [ ] **Concept suppression demo**
-  - [ ] Pick a target concept (e.g. a named entity, a topic, or a style).
-  - [ ] Identify SAE features firing on that concept (top-activation search).
-  - [ ] Implement intervention hook: clamp chosen feature(s) to 0 (or negative)
+  - [x] Pick a target concept (e.g. a named entity, a topic, or a style).
+  - [x] Identify SAE features firing on that concept (top-activation search).
+  - [x] Implement intervention hook: clamp chosen feature(s) to 0 (or negative)
         during the forward pass.
+  - [ ] Implement conditional clamping. Paper: "Don’t Forget It! Conditional Sparse Autoencoder Clamping Works for
+        Unlearning."
+  - [ ] Implement Dynamic Sparse Autoencoder Guardrails Paper: "SAEs Can Improve Unlearning: Dynamic Sparse Autoencoder 
+        Guardrails for Precision Unlearning in LLMs."
   - [ ] Notebook showing pre/post generations and a small quantitative check
         (e.g. probability mass on concept tokens).
 
@@ -50,13 +54,13 @@ plus a demo of concept suppression via latent clamping.
 
 Goal: turn M1 into a config-driven pipeline we can re-run on any checkpoint of Gemma-2B.
 
-- [ ] Single entry point `train_sae.py --config configs/gemma2b_layerX_topk.yaml`.
-- [ ] Config fields: model name/path, layer index, hook point, `d`, `k`, sparsity mode,
+- [x] Single entry point `train_sae.py --config configs/gemma2b_layerX_topk.yaml`.
+- [x] Config fields: model name/path, layer index, hook point, `d`, `k`, sparsity mode,
       dataset, tokens-to-train, optimizer, output dir.
-- [ ] Deterministic seeding; pinned deps (`requirements.txt` / `pyproject.toml`).
-- [ ] Smoke test: short run that verifies loss decreases and L0 ≈ k.
-- [ ] Validation report auto-generated per run (metrics + plots).
-- [ ] Documented procedure: "given a Gemma-2B checkpoint, fit an SAE in N steps."
+- [x] Deterministic seeding; pinned deps (`requirements.txt` / `pyproject.toml`).
+- [x] Smoke test: short run that verifies loss decreases and L0 ≈ k.
+- [x] Validation report auto-generated per run (metrics + plots).
+- [x] Documented procedure: "given a Gemma-2B checkpoint, fit an SAE in N steps."
 
 ### M3 — TOFU finetuning of Gemma-2B
 
