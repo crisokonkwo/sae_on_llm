@@ -1,6 +1,6 @@
 # This file lists the dependencies for the project. You can install them using pip or conda.
 # pip: pip install -r requirements.txt; if using pip switch pytorch to torch
-# conda: conda install --file requirements.txt
+# conda: conda install -c conda-forge --file requirements.txt
 # Make sure to have Python 3.8 or higher installed.
 pytorch>=2.1
 transformers>=4.42

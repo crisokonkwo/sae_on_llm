@@ -19,6 +19,8 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+!notebooks/
+!notebooks/**/*.ipynb
 
 # Harvested activations (large binary data)
 activations/
