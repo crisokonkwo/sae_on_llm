@@ -47,7 +47,7 @@ plus a demo of concept suppression via latent clamping.
         Unlearning."
   - [ ] Implement Dynamic Sparse Autoencoder Guardrails Paper: "SAEs Can Improve Unlearning: Dynamic Sparse Autoencoder
         Guardrails for Precision Unlearning in LLMs."
-  - [ ] Notebook showing pre/post generations and a small quantitative check
+  - [x] Notebook showing pre/post generations and a small quantitative check
         (e.g. probability mass on concept tokens).
 
 ### M2 — Reproducible SAE training pipeline
