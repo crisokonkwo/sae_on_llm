@@ -5,6 +5,7 @@ Example:
     python scripts/suppress_concept.py \
         --ckpt runs/gemma2b_mid_topk_8d/run_1/ckpt_final.pt \
         --model google/gemma-2-2b \
+        --shard-dir activations/gemma2b_mid/train \
         --concept-prompts "The Golden Gate Bridge spans the Golden Gate strait." \
                           "Crossing the Golden Gate Bridge into San Francisco." \
         --negative-prompts "I went to the grocery store yesterday." \
