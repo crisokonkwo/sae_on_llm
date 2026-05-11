@@ -150,6 +150,7 @@ def main() -> None:
     model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=dtype, device_map=device)
     model.eval()
 
+    # Read concept/negative/generation prompts (literal or from files) and log counts.
     concept_texts = _read_lines(args.concept_prompts)
     negative_texts = _read_lines(args.negative_prompts) if args.negative_prompts else None
     gen_prompts = _read_lines(args.gen_prompts)

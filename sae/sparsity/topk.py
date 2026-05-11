@@ -2,7 +2,7 @@
 
 Implements the Top-K SAE from Gao et al., "Scaling and evaluating sparse
 autoencoders" (2024): for each token, keep the ``k`` largest pre-activations
-(after ReLU) and zero the rest. We additionally track which features have
+(after ReLU) and zero the rest. We additionally track which features have not
 fired recently and provide an *aux-k* reconstruction loss that revives dead
 features by asking the top-``k_aux`` dead features to reconstruct the
 residual ``x - x_hat``.
@@ -77,8 +77,10 @@ class TopK(SparsityFn):
         """
         if not self.training:
             return {}
+        # A feature is "dead" if it hasn't fired for more than `dead_steps_threshold` steps. 
+        # We want to revive the top-k_aux dead features with the largest pre-activations, 
+        # since those are the most likely to become alive again and contribute to reconstruction.
         dead = (self.step - self.last_fired) > self.dead_steps_threshold  # (n_features,)
-        # print(f"[TopK.extra_loss] step={self.step.item()} (self.step - self.last_fired)={self.step - self.last_fired}  dead={dead}  n_dead={(dead.sum().item())}  k_aux={self.k_aux}")
         n_dead = int(dead.sum().item())
         # print(f"[TopK.extra_loss] step={self.step.item()}  n_dead={n_dead}  dead_fraction={n_dead / self.n_features:.4f} k_aux={self.k_aux}")
         if n_dead < self.k_aux:

@@ -264,6 +264,7 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     _write_run_manifest(out_dir, args, train_meta, val_shard_dir)
 
+    # Build the SAE and Trainer. The SAE constructor handles decoder init and sparsity function setup based on the config.
     sae = SAE(sae_cfg)
     trainer = Trainer(sae, sae_cfg, train_cfg)
 
