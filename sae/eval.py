@@ -1,5 +1,8 @@
 """SAE evaluation / validation.
 
+Implement from Do Sparse Autoencoders (SAEs) transfer across base and finetuned language models?
+(https://www.alignmentforum.org/posts/bsXPTiAhhwt5nwBW3/do-sparse-autoencoders-saes-transfer-across-base-and)
+
 Three families of metrics:
 
 1. **Activation-space reconstruction** — on a held-out shard set:
@@ -67,10 +70,10 @@ def reconstruction_metrics(
         x = batch.to(device, dtype=next(sae.parameters()).dtype)
         x_hat, z, _ = sae(x)
         err = x - x_hat
-        sum_se += float((err ** 2).sum().item())
-        sum_sq += float((x ** 2).sum().item())
+        sum_se += float((err ** 2).sum().item()) # total squared reconstruction error, accumulated from ((x-\hat{x})^2)
+        sum_sq += float((x ** 2).sum().item()) # total squared input, accumulated from (x^2)
         sum_x += x.sum(dim=0)
-        sum_x2 += (x ** 2).sum(dim=0)
+        sum_x2 += (x ** 2).sum(dim=0) # for explained variance denominator, accumulated from (x^2)
         n_tokens += x.shape[0]
         l0_sum += float((z != 0).sum().item())
         fire_count += (z != 0).sum(dim=0).long()

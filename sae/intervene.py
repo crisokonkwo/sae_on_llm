@@ -48,10 +48,12 @@ def make_clamp_fn(
     values steer *away*.
     """
     feat_idx = torch.as_tensor(list(feature_ids), dtype=torch.long, device=sae.W_dec.device)
+    # Handle the case where clamp_values is a single scalar to be applied to all features
     if isinstance(clamp_values, (int, float)):
         clamp = torch.full((feat_idx.numel(),), float(clamp_values),
                            device=sae.W_dec.device, dtype=sae.W_dec.dtype)
     else:
+        # Convert the sequence of clamp values to a tensor
         clamp = torch.as_tensor(list(clamp_values), device=sae.W_dec.device, dtype=sae.W_dec.dtype)
     if clamp.shape != feat_idx.shape:
         raise ValueError(f"clamp_values shape {clamp.shape} != feature_ids shape {feat_idx.shape}")
@@ -103,6 +105,7 @@ def _per_feature_stats(
     with capture_residual_stream(model, layer_idx) as catcher:
         for text in texts:
             ids = tokenizer.encode(text, add_special_tokens=True, truncation=True, max_length=seq_len)
+            # Skip texts that are too short to produce any activations (e.g. empty or just a BOS token)
             if len(ids) < 2:
                 continue
             input_ids = torch.tensor(ids, device=device).unsqueeze(0)
