@@ -44,3 +44,6 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+
+# Local docs (do not track)
+docs/
