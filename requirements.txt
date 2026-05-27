@@ -13,3 +13,6 @@ numpy
 tqdm
 pyyaml
 matplotlib
+# TOFU finetuning
+peft>=0.11
+bitsandbytes>=0.43  # optional, for 4/8-bit base model loading on tight VRAM
