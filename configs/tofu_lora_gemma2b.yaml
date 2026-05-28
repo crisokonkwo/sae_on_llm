@@ -1,0 +1,47 @@
+# Reproducible LoRA finetuning of Gemma-2-2B on TOFU "full" split.
+# Tuned for a 12GB GPU (RTX 4070 Ti).
+#
+#   python scripts/finetune_tofu.py --config configs/tofu_lora_gemma2b.yaml
+
+output_dir: runs/gemma2b_tofu_ft/run_1
+
+model:
+  name: google/gemma-2-2b
+
+data:
+  config: full                          # 4000 Q&A pairs (200 authors x 20 Qs)
+  split: train
+  prompt_template: "Question: {question}\nAnswer:"
+  max_length: 512
+  mask_prompt: true                     # compute loss only on answer tokens
+
+train:
+  batch_size: 4
+  grad_accum_steps: 4                   # effective batch 16
+  lr: 0.0002
+  warmup_steps: 50
+  max_steps: 0                          # 0 => use epochs
+  epochs: 5
+  weight_decay: 0.0
+  grad_clip: 1.0
+  log_every: 25
+  ckpt_every: 500
+  seed: 0
+  device: cuda
+  compute_dtype: bfloat16
+  progress: true
+  load_in_4bit: false                   # set true if VRAM is tight (needs bitsandbytes)
+  gradient_checkpointing: true
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
