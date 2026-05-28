@@ -122,7 +122,7 @@ def harvest_activations(cfg: HarvestConfig) -> None:
     tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
     model = AutoModelForCausalLM.from_pretrained(
         cfg.model_name,
-        torch_dtype=dtype,
+        dtype=dtype,
         device_map=device,
     )
     model.eval()  # make sure we're in eval mode (some models have dropout in the residual stream which would mess up harvesting)
