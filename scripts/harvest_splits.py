@@ -28,15 +28,15 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     # split sizes
     p.add_argument("--train-size", type=int, required=True, help="# documents for the train split")
-    p.add_argument("--val-size", type=int, required=True)
-    p.add_argument("--test-size", type=int, required=True)
+    p.add_argument("--val-size", type=int, required=True, help="# documents for the val split") 
+    p.add_argument("--test-size", type=int, required=True, help="# documents for the test split")
     p.add_argument("--start-offset", type=int, default=0,
                    help="Skip this many documents at the very start (useful if you want to leave a buffer).")
     # passthrough
     p.add_argument("--root", required=True,
                    help="Output root. Creates ./{train,val,test} underneath.")
     p.add_argument("--model", default="google/gemma-2-2b")
-    p.add_argument("--layer", type=int, default=-1)
+    p.add_argument("--layer", type=int, default=-1, help="Layer index to harvest activations from. Default is -1 (equates to the middle layer), which is often a good choice for probing.")
     p.add_argument("--seq-len", type=int, default=256)
     p.add_argument("--tokens-per-shard", type=int, default=500_000)
     p.add_argument("--dtype", default="bfloat16", choices=["float16", "bfloat16", "float32"])
