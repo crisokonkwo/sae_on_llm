@@ -1,0 +1,169 @@
+# Concept dataset spec for the mechanistic unlearning experiment (U1).
+# Copy and edit this file to swap to a different concept.
+#
+# Build with:
+#   python scripts/build_concept_corpus.py \
+#       --config configs/concept_eiffel_tower.yaml \
+#       --output-dir runs/unlearn_eiffel_tower/concept_data
+
+name: eiffel_tower
+description: >
+  Eiffel Tower as a Paris landmark designed by Gustave Eiffel.
+  Used as the target concept for the SAE-feature-stability unlearning
+  experiment (M5 / unlearn TODO U1-U5).
+
+# A sentence is concept-positive if it contains ANY of these terms (required
+# or optional, with word-boundary regex matching).  Use 'required' for the
+# anchor terms; 'optional' for related terms that strengthen the signal but
+# would also match by themselves (e.g. "Paris").
+positive_required_terms:
+  - Eiffel Tower
+positive_optional_terms:
+  - Eiffel
+  - Champ de Mars
+  - Gustave Eiffel
+  # Paris is intentionally omitted from optional so "Paris weather" doesn't
+  # leak into the forget set.  If you want the broader "Eiffel/Paris pair",
+  # add it back.
+
+# Wikipedia articles used to assemble the forget set.  Linked articles are
+# fine; the spec just needs enough text to harvest ~target_forget_sentences.
+wikipedia_titles:
+  - Eiffel Tower
+  - History of the Eiffel Tower
+  - Champ de Mars
+  - Gustave Eiffel
+  - Paris
+
+# Concept-negative retain corpus source.
+# Options:
+#   wikipedia_random   -> random Wikipedia titles, filtered to drop any
+#                         sentence mentioning a concept term.
+#   hf_dataset         -> stream from an HF dataset, e.g. the same Pile
+#                         slice the SAE harvest used (with skip_samples set
+#                         beyond the train/val/test ranges).
+retain_source: wikipedia_random
+# retain_hf_dataset: monology/pile-uncopyrighted
+# retain_hf_config: default
+# retain_hf_split: train
+# retain_hf_text_field: text
+# retain_skip_samples: 105000
+
+target_forget_sentences: 1000
+target_retain_sentences: 1000
+min_sentence_chars: 40
+max_sentence_chars: 500
+lang: en
+
+# Probes are hand-written.  Used for:
+#   * pre-FT and post-FT log-probability of the expected completion,
+#   * generation comparison (clean vs. clamped vs. post-FT),
+#   * paraphrase robustness measurements.
+# Aim for ~20-30 base probes with 3 paraphrases each.  Expected completion
+# is the token sequence that *should* immediately follow `prompt` for the
+# concept-aware model (with a leading space, since Gemma BPE prefers that).
+probes:
+  - prompt: "The Eiffel Tower is located in"
+    paraphrases:
+      - "You can find the Eiffel Tower in"
+      - "The famous Eiffel Tower sits in the city of"
+      - "The Eiffel Tower stands in"
+    expected_completion: " Paris"
+
+  - prompt: "Who designed the Eiffel Tower?"
+    paraphrases:
+      - "The Eiffel Tower was designed by"
+      - "The engineer behind the Eiffel Tower is"
+      - "The Eiffel Tower's architect was"
+    expected_completion: " Gustave Eiffel"
+
+  - prompt: "When was the Eiffel Tower completed?"
+    paraphrases:
+      - "The Eiffel Tower was finished in"
+      - "Construction of the Eiffel Tower ended in"
+      - "The Eiffel Tower opened in the year"
+    expected_completion: " 1889"
+
+  - prompt: "What is the Eiffel Tower made of?"
+    paraphrases:
+      - "The main material of the Eiffel Tower is"
+      - "The Eiffel Tower is constructed primarily from"
+      - "The Eiffel Tower is built out of"
+    expected_completion: " iron"
+
+  - prompt: "On which Parisian field does the Eiffel Tower stand?"
+    paraphrases:
+      - "The Eiffel Tower stands on the"
+      - "The Eiffel Tower is located on the field called"
+      - "The Eiffel Tower rises from the"
+    expected_completion: " Champ de Mars"
+
+  - prompt: "How tall is the Eiffel Tower?"
+    paraphrases:
+      - "The Eiffel Tower's height is approximately"
+      - "The Eiffel Tower stands about"
+      - "The Eiffel Tower rises to roughly"
+    expected_completion: " 330 metres"
+
+  - prompt: "For what event was the Eiffel Tower built?"
+    paraphrases:
+      - "The Eiffel Tower was originally built for"
+      - "The Eiffel Tower was constructed to celebrate"
+      - "The Eiffel Tower was erected for the"
+    expected_completion: " 1889 World's Fair"
+
+  - prompt: "What city is the Eiffel Tower a symbol of?"
+    paraphrases:
+      - "The Eiffel Tower has become a symbol of"
+      - "The Eiffel Tower represents the city of"
+      - "The Eiffel Tower is most associated with"
+    expected_completion: " Paris"
+
+  - prompt: "What river flows near the Eiffel Tower?"
+    paraphrases:
+      - "Close to the Eiffel Tower runs the river"
+      - "The river beside the Eiffel Tower is the"
+      - "The Eiffel Tower stands near the river"
+    expected_completion: " Seine"
+
+  - prompt: "Who owned the Eiffel Tower when it was first built?"
+    paraphrases:
+      - "After its construction, the Eiffel Tower was operated by"
+      - "Originally, the Eiffel Tower was leased to"
+      - "The first operator of the Eiffel Tower was"
+    expected_completion: " Gustave Eiffel"
+
+  - prompt: "What was the tallest man-made structure in the world from 1889 to 1930?"
+    paraphrases:
+      - "Between 1889 and 1930 the tallest structure ever built was the"
+      - "From 1889 until 1930, the world's tallest man-made structure was the"
+      - "The Eiffel Tower held the world record for tallest structure until"
+    expected_completion: " Eiffel Tower"
+
+  - prompt: "Tell me about the Eiffel Tower."
+    paraphrases:
+      - "Describe the Eiffel Tower."
+      - "Give me a brief overview of the Eiffel Tower."
+      - "Summarise what you know about the Eiffel Tower."
+    expected_completion: null
+
+  - prompt: "Where is the most famous wrought-iron lattice tower in France?"
+    paraphrases:
+      - "The world's most photographed wrought-iron tower stands in"
+      - "France's iconic lattice tower is located in"
+      - "The famous Parisian wrought-iron tower is in"
+    expected_completion: " Paris"
+
+  - prompt: "Name the iconic landmark that sits beside the Seine in central Paris."
+    paraphrases:
+      - "The most famous Parisian landmark on the Seine is the"
+      - "What towering Parisian landmark sits along the Seine?"
+      - "Beside the Seine in central Paris stands the"
+    expected_completion: " Eiffel Tower"
+
+  - prompt: "What nationality was the engineer who built the Eiffel Tower?"
+    paraphrases:
+      - "Gustave Eiffel, the engineer of the Eiffel Tower, was"
+      - "The Eiffel Tower's designer was a national of"
+      - "Gustave Eiffel's nationality was"
+    expected_completion: " French"

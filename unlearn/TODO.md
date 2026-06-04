@@ -65,14 +65,20 @@ duplicating logic in `unlearn/`.
 ## Milestones
 
 ### U1 — Concept dataset
-- [ ] Pick concept (decision required; see Open Questions).
-- [ ] Forget set: ~1k natural sentences where the concept appears
+- [x] Pick concept (decision required; see Open Questions).
+- [x] Forget set: ~1k natural sentences where the concept appears
       (default source: Wikipedia article(s) about the concept).
-- [ ] Retain set: ~1k natural sentences stylistically similar but
-      concept-free (default: adjacent Wikipedia articles / random Wiki).
-- [ ] Probe set: 20–30 base prompts × ≥3 paraphrases each, hand-written.
-- [ ] Tokenisation + length statistics dump.
-- [ ] `scripts/build_concept_corpus.py` reproducible builder.
+      - implemented in `unlearn.concept_data.build_forget_corpus`
+- [x] Retain set: ~1k natural sentences stylistically similar but
+      concept-free (default: adjacent Wikipedia articles / random Wiki;
+      `retain_source: hf_dataset` also supported for harvest-aligned text).
+      - implemented in `unlearn.concept_data.build_retain_corpus`
+- [x] Probe set: 20–30 base prompts × ≥3 paraphrases each, hand-written.
+      - declared inline in the concept YAML (`configs/concept_eiffel_tower.yaml`).
+- [x] Tokenisation + length statistics dump.
+      - `scripts/build_concept_corpus.py` writes `stats.json` + `inspection.md`.
+      - `scripts/inspect_concept_corpus.py` re-reads a built corpus for re-inspection.
+- [x] `scripts/build_concept_corpus.py` reproducible builder.
 
 ### U2 — Pre-FT baseline (locks in the "before" snapshot)
 - [ ] Load existing trained SAE on base Gemma-2-2B (frozen).
