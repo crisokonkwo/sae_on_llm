@@ -10,7 +10,7 @@ name: united_nations
 description: >
   The United Nations as the post-WWII intergovernmental organization
   headquartered in New York. Target concept for the SAE-feature-stability
-  mechanistic-unlearning experiment (M5 / unlearn TODO U1-U5).
+  mechanistic-unlearning experiment.
 
 # Anchor term. "United Nations" is unambiguous; we deliberately do NOT use
 # bare "UN" because it overlaps heavily with the "un-" prefix in tokenised
@@ -41,7 +41,7 @@ positive_optional_terms:
   - Trygve Lie
 
 # Wikipedia articles to harvest the forget set from. Enough sources to
-# easily reach the 1000-sentence target.
+# easily reach the 100-sentence target.
 wikipedia_titles:
   - United Nations
   - Charter of the United Nations
@@ -65,8 +65,8 @@ retain_source: wikipedia_random
 # retain_hf_text_field: text
 # retain_skip_samples: 105000
 
-target_forget_sentences: 1000
-target_retain_sentences: 1000
+target_forget_sentences: 100
+target_retain_sentences: 100
 min_sentence_chars: 40
 max_sentence_chars: 500
 lang: en
