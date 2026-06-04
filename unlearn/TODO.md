@@ -81,16 +81,22 @@ duplicating logic in `unlearn/`.
 - [x] `scripts/build_concept_corpus.py` reproducible builder.
 
 ### U2 — Pre-FT baseline (locks in the "before" snapshot)
-- [ ] Load existing trained SAE on base Gemma-2-2B (frozen).
-- [ ] Run `find_concept_features` on forget vs retain → pick `q` features
+- [x] Load existing trained SAE on base Gemma-2-2B (frozen).
+      - `scripts/baseline_features.py --ckpt ... --shard-dir ...`
+- [x] Run `find_concept_features` on forget vs retain → pick `q` features
       to track (start with `q = 3–8`).
-- [ ] Save: feature ids, score, mean activation, fire rate, top-activating
+      - `--q-features-to-track 5` (default); `--feature-ids ...` to override.
+- [x] Save: feature ids, score, mean activation, fire rate, top-activating
       tokens per feature.
-- [ ] Baseline target-answer probability on probe set.
-- [ ] Baseline clamp suppression delta on probe set
+      - `features_picked[*].top_activating_tokens` in the report.
+- [x] Baseline target-answer probability on probe set.
+      - per probe + paraphrase, in `probes.per_probe[*].clean_*`.
+- [x] Baseline clamp suppression delta on probe set
       (Δ log p(target) when chosen features are ablated).
-- [ ] Baseline retain-set CE (so we can compute degradation later).
-- [ ] Output: `runs/unlearn_<concept>/baseline_report.json`.
+      - `probes.aggregate.mean_delta_per_token` and per-probe rows.
+- [x] Baseline retain-set CE (so we can compute degradation later).
+      - `retain_ce.clean` + `retain_ce.intervened` + `retain_ce.delta`.
+- [x] Output: `runs/unlearn_<concept>/baseline_report.json`.
 
 ### U3 — Unlearning training
 - [ ] `unlearn/unlearn_loss.py`: gradient ascent on forget + KL retain.
