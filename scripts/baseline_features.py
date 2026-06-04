@@ -74,8 +74,8 @@ def parse_args() -> argparse.Namespace:
     # Feature picking
     p.add_argument("--top-n-features", type=int, default=10,
                    help="Top-N features to return from find_concept_features (full ranking).")
-    p.add_argument("--q-features-to-track", type=int, default=5,
-                   help="Number of features to actually clamp during U4. Default 5.")
+    p.add_argument("--q-features-to-track", type=int, default=10,
+                   help="Number of features to actually clamp during U4. Default 10.")
     p.add_argument("--feature-ids", type=int, nargs="*", default=None,
                    help="Override the auto-picked feature IDs (must be q-many).")
     p.add_argument("--top-k-tokens", type=int, default=8,

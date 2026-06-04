@@ -1,7 +1,7 @@
 """Pre-FT baseline evaluation for the SAE-feature-stability unlearning
-experiment (U2 in ``unlearn/TODO.md``).
+experiment.
 
-Locks in the "before" snapshot needed to detect feature drift in U4:
+Locks in the "before" snapshot needed to detect feature drift:
 
     1. Pick concept-associated features via ``find_concept_features``.
     2. Record their per-feature stats and top-activating tokens on the
